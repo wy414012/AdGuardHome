@@ -321,8 +321,6 @@ func authRequest(path string, c *http.Cookie, user, pass string) (r *http.Reques
 func TestAuth_ServeHTTP_firstRun(t *testing.T) {
 	storeGlobals(t)
 
-	globalContext.firstRun = true
-
 	mux := http.NewServeMux()
 	globalContext.mux = mux
 
@@ -337,6 +335,7 @@ func TestAuth_ServeHTTP_firstRun(t *testing.T) {
 		nil,
 		agh.EmptyConfigModifier{},
 		false,
+		true,
 	)
 	require.NoError(t, err)
 
@@ -503,6 +502,7 @@ func TestAuth_ServeHTTP_auth(t *testing.T) {
 		auth,
 		agh.EmptyConfigModifier{},
 		false,
+		false,
 	)
 	require.NoError(t, err)
 
@@ -653,6 +653,7 @@ func TestAuth_ServeHTTP_logout(t *testing.T) {
 		nil,
 		auth,
 		agh.EmptyConfigModifier{},
+		false,
 		false,
 	)
 	require.NoError(t, err)

@@ -291,7 +291,8 @@ func ensureHandler(method string, handler func(http.ResponseWriter, *http.Reques
 // preInstall lets the handler run only if firstRun is true, no redirects
 func preInstall(handler func(http.ResponseWriter, *http.Request)) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if !globalContext.firstRun {
+		// TODO(s.chzhen): !! Do not use the global context.
+		if !globalContext.web.conf.firstRun {
 			// if it's not first run, don't let users access it (for example /install.html when configuration is done)
 			http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 			return
@@ -407,7 +408,8 @@ func httpsURL(u *url.URL, host string, portHTTPS uint16) (redirectURL *url.URL) 
 func postInstall(handler func(http.ResponseWriter, *http.Request)) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
-		if globalContext.firstRun && !strings.HasPrefix(path, "/install.") &&
+		// TODO(s.chzhen): !! Do not use the global context.
+		if globalContext.web.conf.firstRun && !strings.HasPrefix(path, "/install.") &&
 			!strings.HasPrefix(path, "/assets/") {
 			http.Redirect(w, r, "install.html", http.StatusFound)
 

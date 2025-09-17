@@ -153,7 +153,6 @@ func storeGlobals(tb testing.TB) {
 	prefGLFilePrefix := glFilePrefix
 	storage := globalContext.clients.storage
 	dnsServer := globalContext.dnsServer
-	firstRun := globalContext.firstRun
 	mux := globalContext.mux
 	web := globalContext.web
 
@@ -162,7 +161,6 @@ func storeGlobals(tb testing.TB) {
 		glFilePrefix = prefGLFilePrefix
 		globalContext.clients.storage = storage
 		globalContext.dnsServer = dnsServer
-		globalContext.firstRun = firstRun
 		globalContext.mux = mux
 		globalContext.web = web
 	})
@@ -343,7 +341,18 @@ func TestTLSManager_Reload(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	web, err := initWeb(ctx, options{}, nil, nil, testLogger, nil, nil, agh.EmptyConfigModifier{}, false)
+	web, err := initWeb(
+		ctx,
+		options{},
+		nil,
+		nil,
+		testLogger,
+		nil,
+		nil,
+		agh.EmptyConfigModifier{},
+		false,
+		false,
+	)
 	require.NoError(t, err)
 
 	m.setWebAPI(web)
@@ -415,7 +424,18 @@ func TestValidateTLSSettings(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	web, err := initWeb(ctx, options{}, nil, nil, testLogger, nil, nil, agh.EmptyConfigModifier{}, false)
+	web, err := initWeb(
+		ctx,
+		options{},
+		nil,
+		nil,
+		testLogger,
+		nil,
+		nil,
+		agh.EmptyConfigModifier{},
+		false,
+		false,
+	)
 	require.NoError(t, err)
 
 	m.setWebAPI(web)
@@ -519,7 +539,18 @@ func TestTLSManager_HandleTLSValidate(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	web, err := initWeb(ctx, options{}, nil, nil, testLogger, nil, nil, agh.EmptyConfigModifier{}, false)
+	web, err := initWeb(
+		ctx,
+		options{},
+		nil,
+		nil,
+		testLogger,
+		nil,
+		nil,
+		agh.EmptyConfigModifier{},
+		false,
+		false,
+	)
 	require.NoError(t, err)
 
 	m.setWebAPI(web)
@@ -612,7 +643,18 @@ func TestTLSManager_HandleTLSConfigure(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	web, err := initWeb(ctx, options{}, nil, nil, testLogger, nil, nil, agh.EmptyConfigModifier{}, false)
+	web, err := initWeb(
+		ctx,
+		options{},
+		nil,
+		nil,
+		testLogger,
+		nil,
+		nil,
+		agh.EmptyConfigModifier{},
+		false,
+		false,
+	)
 	require.NoError(t, err)
 
 	m.setWebAPI(web)

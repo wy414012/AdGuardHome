@@ -81,6 +81,7 @@ func TestWeb_HandleGetProfile(t *testing.T) {
 		auth,
 		agh.EmptyConfigModifier{},
 		false,
+		false,
 	)
 	require.NoError(t, err)
 
