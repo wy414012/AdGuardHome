@@ -445,11 +445,29 @@ func (web *webAPI) handleInstallConfigure(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	web.applyInstallConfig(ctx, w, r, req, restartHTTP)
+}
+
+// applyInstallConfig applies validated install settings.
+func (web *webAPI) applyInstallConfig(
+	ctx context.Context,
+	w http.ResponseWriter,
+	r *http.Request,
+	req *applyConfigReq,
+	restartHTTP bool,
+) {
+	var err error
 	curConfig := &configuration{}
 	copyInstallSettings(curConfig, config)
 
-	// TODO(s.chzhen): !! Refactor multiple assignments.
-	web.conf.firstRun = false
+	defer func() {
+		if err != nil {
+			copyInstallSettings(config, curConfig)
+
+			return
+		}
+	}()
+
 	config.DNS.BindHosts = []netip.Addr{req.DNS.IP}
 	config.DNS.Port = req.DNS.Port
 	config.Filtering.Logger = web.baseLogger.With(slogutil.KeyPrefix, "filtering")
@@ -463,8 +481,6 @@ func (web *webAPI) handleInstallConfigure(w http.ResponseWriter, r *http.Request
 	}
 	err = web.auth.addUser(ctx, u, req.Password)
 	if err != nil {
-		web.conf.firstRun = true
-		copyInstallSettings(config, curConfig)
 		aghhttp.Error(r, w, http.StatusUnprocessableEntity, "%s", err)
 
 		return
@@ -476,8 +492,6 @@ func (web *webAPI) handleInstallConfigure(w http.ResponseWriter, r *http.Request
 	// functions potentially restart the HTTPS server.
 	err = startMods(ctx, web.baseLogger, web.tlsManager, web.confModifier)
 	if err != nil {
-		web.conf.firstRun = true
-		copyInstallSettings(config, curConfig)
 		aghhttp.Error(r, w, http.StatusInternalServerError, "%s", err)
 
 		return
@@ -485,8 +499,6 @@ func (web *webAPI) handleInstallConfigure(w http.ResponseWriter, r *http.Request
 
 	err = config.write(web.tlsManager, web.auth)
 	if err != nil {
-		web.conf.firstRun = true
-		copyInstallSettings(config, curConfig)
 		aghhttp.Error(r, w, http.StatusInternalServerError, "Couldn't write config: %s", err)
 
 		return

@@ -645,7 +645,8 @@ func TestAuth_ServeHTTP_logout(t *testing.T) {
 	globalContext.mux = http.NewServeMux()
 
 	ctx := testutil.ContextWithTimeout(t, testTimeout)
-	web, err := initWeb(ctx,
+	web, err := initWeb(
+		ctx,
 		options{},
 		nil,
 		nil,
