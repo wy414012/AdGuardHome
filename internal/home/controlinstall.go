@@ -445,11 +445,12 @@ func (web *webAPI) handleInstallConfigure(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	web.applyInstallConfig(ctx, w, r, req, restartHTTP)
+	web.finalizeInstall(ctx, w, r, req, restartHTTP)
 }
 
-// applyInstallConfig applies validated install settings.
-func (web *webAPI) applyInstallConfig(
+// finalizeInstall completes first-run setup by applying user-provided settings.
+// r and req must not be nil.
+func (web *webAPI) finalizeInstall(
 	ctx context.Context,
 	w http.ResponseWriter,
 	r *http.Request,
@@ -592,7 +593,16 @@ func startMods(
 }
 
 func (web *webAPI) registerInstallHandlers() {
-	globalContext.mux.HandleFunc("/control/install/get_addresses", preInstall(ensureGET(web.handleInstallGetAddresses)))
-	globalContext.mux.HandleFunc("/control/install/check_config", preInstall(ensurePOST(web.handleInstallCheckConfig)))
-	globalContext.mux.HandleFunc("/control/install/configure", preInstall(ensurePOST(web.handleInstallConfigure)))
+	globalContext.mux.Handle(
+		"/control/install/get_addresses",
+		web.preInstallHandler(ensure(http.MethodGet, web.handleInstallGetAddresses)),
+	)
+	globalContext.mux.Handle(
+		"/control/install/check_config",
+		web.preInstallHandler(ensure(http.MethodPost, web.handleInstallCheckConfig)),
+	)
+	globalContext.mux.Handle(
+		"/control/install/configure",
+		web.preInstallHandler(ensure(http.MethodPost, web.handleInstallConfigure)),
+	)
 }

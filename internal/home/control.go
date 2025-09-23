@@ -173,7 +173,10 @@ func (web *webAPI) handleStatus(w http.ResponseWriter, r *http.Request) {
 // registerControlHandlers sets up HTTP handlers for various control endpoints.
 // web must not be nil.
 func registerControlHandlers(web *webAPI) {
-	globalContext.mux.HandleFunc("/control/version.json", postInstall(web.handleVersionJSON))
+	globalContext.mux.Handle(
+		"/control/version.json",
+		web.postInstallHandler(http.HandlerFunc(web.handleVersionJSON)),
+	)
 	httpRegister(http.MethodPost, "/control/update", web.handleUpdate)
 
 	httpRegister(http.MethodGet, "/control/status", web.handleStatus)
@@ -182,9 +185,15 @@ func registerControlHandlers(web *webAPI) {
 	httpRegister(http.MethodGet, "/control/profile", web.handleGetProfile)
 	httpRegister(http.MethodPut, "/control/profile/update", web.handlePutProfile)
 
-	// No auth is necessary for DoH/DoT configurations
-	globalContext.mux.HandleFunc("/apple/doh.mobileconfig", postInstall(handleMobileConfigDoH))
-	globalContext.mux.HandleFunc("/apple/dot.mobileconfig", postInstall(handleMobileConfigDoT))
+	// No auth is necessary for DoH/DoT configurations.
+	globalContext.mux.Handle(
+		"/apple/doh.mobileconfig",
+		web.postInstallHandler(http.HandlerFunc(handleMobileConfigDoH)),
+	)
+	globalContext.mux.Handle(
+		"/apple/dot.mobileconfig",
+		web.postInstallHandler(http.HandlerFunc(handleMobileConfigDoT)),
+	)
 	RegisterAuthHandlers(web)
 }
 
@@ -192,13 +201,13 @@ func registerControlHandlers(web *webAPI) {
 func httpRegister(method, url string, handler http.HandlerFunc) {
 	if method == "" {
 		// "/dns-query" handler doesn't need auth, gzip and isn't restricted by 1 HTTP method
-		globalContext.mux.HandleFunc(url, postInstall(handler))
+		globalContext.mux.Handle(url, postInstallHandler(handler))
 		return
 	}
 
 	globalContext.mux.Handle(
 		url,
-		postInstallHandler(gziphandler.GzipHandler(ensureHandler(method, handler))),
+		postInstallHandler(gziphandler.GzipHandler(ensure(method, handler))),
 	)
 }
 
@@ -207,7 +216,7 @@ func httpRegister(method, url string, handler http.HandlerFunc) {
 func ensure(
 	method string,
 	handler func(http.ResponseWriter, *http.Request),
-) (wrapped func(http.ResponseWriter, *http.Request)) {
+) (wrapped http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		m := r.Method
 		if m != method {
@@ -265,54 +274,20 @@ func ensureContentType(w http.ResponseWriter, r *http.Request) (ok bool) {
 	return false
 }
 
-func ensurePOST(handler func(http.ResponseWriter, *http.Request)) func(http.ResponseWriter, *http.Request) {
-	return ensure(http.MethodPost, handler)
-}
-
-func ensureGET(handler func(http.ResponseWriter, *http.Request)) func(http.ResponseWriter, *http.Request) {
-	return ensure(http.MethodGet, handler)
-}
-
-// Bridge between http.Handler object and Go function
-type httpHandler struct {
-	handler func(http.ResponseWriter, *http.Request)
-}
-
-func (h *httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	h.handler(w, r)
-}
-
-func ensureHandler(method string, handler func(http.ResponseWriter, *http.Request)) http.Handler {
-	h := httpHandler{}
-	h.handler = ensure(method, handler)
-	return &h
-}
-
-// preInstall lets the handler run only if firstRun is true, no redirects
-func preInstall(handler func(http.ResponseWriter, *http.Request)) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		// TODO(s.chzhen): !! Do not use the global context.
-		if !globalContext.web.conf.firstRun {
-			// if it's not first run, don't let users access it (for example /install.html when configuration is done)
+// preInstallHandler lets the handler run only if firstRun is true; it does not
+// perform redirects.
+func (web *webAPI) preInstallHandler(handler http.Handler) (wrapped http.Handler) {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !web.conf.firstRun {
+			// If it's not first run, do not allow access to install-only routes
+			// (for example, /install.html once configuration is complete).
 			http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+
 			return
 		}
-		handler(w, r)
-	}
-}
 
-// preInstallStruct wraps preInstall into a struct that can be returned as an interface where necessary
-type preInstallHandlerStruct struct {
-	handler http.Handler
-}
-
-func (p *preInstallHandlerStruct) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	preInstall(p.handler.ServeHTTP)(w, r)
-}
-
-// preInstallHandler returns http.Handler interface for preInstall wrapper
-func preInstallHandler(handler http.Handler) http.Handler {
-	return &preInstallHandlerStruct{handler}
+		handler.ServeHTTP(w, r)
+	})
 }
 
 // handleHTTPSRedirect redirects the request to HTTPS, if needed, and adds some
@@ -402,35 +377,52 @@ func httpsURL(u *url.URL, host string, portHTTPS uint16) (redirectURL *url.URL) 
 	}
 }
 
-// postInstall lets the handler to run only if firstRun is false.  Otherwise, it
-// redirects to /install.html.  It also enforces HTTPS if it is enabled and
-// configured and sets appropriate access control headers.
-func postInstall(handler func(http.ResponseWriter, *http.Request)) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
+// postInstallHandler lets the handler to run only if firstRun is false.
+// Otherwise, it redirects to /install.html.  It also enforces HTTPS if it is
+// enabled and configured and sets appropriate access control headers.
+//
+// TODO(s.chzhen):  Replace with [web.postInstall] after fixing its usage in
+// [httpRegister], which is called by [dhcpd.Create] before [web] is
+// initialized.
+func postInstallHandler(handler http.Handler) (wrapped http.Handler) {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if globalContext.web == nil {
+			aghhttp.Error(r, w, http.StatusTooEarly, "it is not initialized yet")
+
+			return
+		}
+
 		path := r.URL.Path
-		// TODO(s.chzhen): !! Do not use the global context.
-		if globalContext.web.conf.firstRun && !strings.HasPrefix(path, "/install.") &&
+		if globalContext.web.conf.firstRun &&
+			!strings.HasPrefix(path, "/install.") &&
 			!strings.HasPrefix(path, "/assets/") {
 			http.Redirect(w, r, "install.html", http.StatusFound)
 
 			return
 		}
 
-		proceed := handleHTTPSRedirect(w, r)
-		if proceed {
-			handler(w, r)
+		if handleHTTPSRedirect(w, r) {
+			handler.ServeHTTP(w, r)
 		}
-	}
+	})
 }
 
-type postInstallHandlerStruct struct {
-	handler http.Handler
-}
+// postInstallHandler lets the handler to run only if firstRun is false.
+// Otherwise, it redirects to /install.html.  It also enforces HTTPS if it is
+// enabled and configured and sets appropriate access control headers.
+func (web *webAPI) postInstallHandler(handler http.Handler) (wrapped http.Handler) {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		path := r.URL.Path
+		if web.conf.firstRun &&
+			!strings.HasPrefix(path, "/install.") &&
+			!strings.HasPrefix(path, "/assets/") {
+			http.Redirect(w, r, "install.html", http.StatusFound)
 
-func (p *postInstallHandlerStruct) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	postInstall(p.handler.ServeHTTP)(w, r)
-}
+			return
+		}
 
-func postInstallHandler(handler http.Handler) http.Handler {
-	return &postInstallHandlerStruct{handler}
+		if handleHTTPSRedirect(w, r) {
+			handler.ServeHTTP(w, r)
+		}
+	})
 }

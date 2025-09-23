@@ -268,7 +268,7 @@ func (web *webAPI) handleLogout(w http.ResponseWriter, r *http.Request) {
 func RegisterAuthHandlers(web *webAPI) {
 	globalContext.mux.Handle(
 		"/control/login",
-		postInstallHandler(ensureHandler(http.MethodPost, web.handleLogin)),
+		web.postInstallHandler(ensure(http.MethodPost, web.handleLogin)),
 	)
 	httpRegister(http.MethodGet, "/control/logout", web.handleLogout)
 }

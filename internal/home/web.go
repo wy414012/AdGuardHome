@@ -165,7 +165,7 @@ func newWebAPI(ctx context.Context, conf *webConfig) (w *webAPI) {
 	// if not configured, redirect / to /install.html, otherwise redirect /install.html to /
 	globalContext.mux.Handle(
 		"/",
-		withMiddlewares(clientFS, gziphandler.GzipHandler, postInstallHandler),
+		withMiddlewares(clientFS, gziphandler.GzipHandler, w.postInstallHandler),
 	)
 
 	// add handlers for /install paths, we only need them when we're not configured yet
@@ -175,7 +175,7 @@ func newWebAPI(ctx context.Context, conf *webConfig) (w *webAPI) {
 			"This is the first launch of AdGuard Home, redirecting everything to /install.html",
 		)
 
-		globalContext.mux.Handle("/install.html", preInstallHandler(clientFS))
+		globalContext.mux.Handle("/install.html", w.preInstallHandler(clientFS))
 		w.registerInstallHandlers()
 	} else {
 		registerControlHandlers(w)
