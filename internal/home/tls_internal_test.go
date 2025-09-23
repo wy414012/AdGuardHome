@@ -295,6 +295,8 @@ func assertCertSerialNumber(tb testing.TB, conf *tlsConfigSettings, wantSN int64
 
 // initEmptyWeb returns an initialized *webAPI with zero values and no-op mocks.
 func initEmptyWeb(tb testing.TB) (web *webAPI) {
+	tb.Helper()
+
 	web, err := initWeb(
 		testutil.ContextWithTimeout(tb, testTimeout),
 		options{},
@@ -303,6 +305,7 @@ func initEmptyWeb(tb testing.TB) (web *webAPI) {
 		testLogger,
 		nil,
 		nil,
+		http.NewServeMux(),
 		agh.EmptyConfigModifier{},
 		false,
 		false,

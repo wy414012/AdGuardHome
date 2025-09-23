@@ -549,8 +549,8 @@ func isUpdateEnabled(
 	}
 }
 
-// initWeb initializes the web module.  upd, baseLogger, tlsMgr, and auth must
-// not be nil.
+// initWeb initializes the web module.  upd, baseLogger, tlsMgr, auth, and mux
+// must not be nil.
 func initWeb(
 	ctx context.Context,
 	opts options,
@@ -559,6 +559,7 @@ func initWeb(
 	baseLogger *slog.Logger,
 	tlsMgr *tlsManager,
 	auth *auth,
+	mux *http.ServeMux,
 	confModifier agh.ConfigModifier,
 	isCustomUpdURL bool,
 	isFirstRun bool,
@@ -589,6 +590,7 @@ func initWeb(
 		confModifier:       confModifier,
 		tlsManager:         tlsMgr,
 		auth:               auth,
+		mux:                mux,
 
 		clientFS: clientFS,
 
@@ -765,6 +767,7 @@ func run(
 		slogLogger,
 		tlsMgr,
 		auth,
+		globalContext.mux,
 		confModifier,
 		isCustomURL,
 		isFirstRun,
@@ -1165,8 +1168,8 @@ type jsonError struct {
 	Message string `json:"message"`
 }
 
-// cmdlineUpdate updates current application and exits.  l and tlsMgr must not
-// be nil.
+// cmdlineUpdate updates current application and exits.  l, upd, and tlsMgr must
+// not be nil.
 func cmdlineUpdate(
 	ctx context.Context,
 	l *slog.Logger,

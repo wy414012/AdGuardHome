@@ -333,6 +333,7 @@ func TestAuth_ServeHTTP_firstRun(t *testing.T) {
 		testLogger,
 		nil,
 		nil,
+		mux,
 		agh.EmptyConfigModifier{},
 		false,
 		true,
@@ -483,7 +484,8 @@ func TestAuth_ServeHTTP_auth(t *testing.T) {
 
 	t.Cleanup(func() { auth.close(testutil.ContextWithTimeout(t, testTimeout)) })
 
-	globalContext.mux = http.NewServeMux()
+	baseMux := http.NewServeMux()
+	globalContext.mux = baseMux
 
 	tlsMgr, err := newTLSManager(testutil.ContextWithTimeout(t, testTimeout), &tlsManagerConfig{
 		logger:       testLogger,
@@ -500,6 +502,7 @@ func TestAuth_ServeHTTP_auth(t *testing.T) {
 		testLogger,
 		tlsMgr,
 		auth,
+		baseMux,
 		agh.EmptyConfigModifier{},
 		false,
 		false,
@@ -508,10 +511,10 @@ func TestAuth_ServeHTTP_auth(t *testing.T) {
 
 	globalContext.web = web
 
-	mux := auth.middleware().Wrap(globalContext.mux)
+	mux := auth.middleware().Wrap(baseMux)
 
 	auth.isGLiNet = true
-	gliNetMw := auth.middleware().Wrap(globalContext.mux)
+	gliNetMw := auth.middleware().Wrap(baseMux)
 
 	loginCookie := generateAuthCookie(t, mux, userName, userPassword)
 
@@ -642,7 +645,8 @@ func TestAuth_ServeHTTP_logout(t *testing.T) {
 
 	t.Cleanup(func() { auth.close(testutil.ContextWithTimeout(t, testTimeout)) })
 
-	globalContext.mux = http.NewServeMux()
+	baseMux := http.NewServeMux()
+	globalContext.mux = baseMux
 
 	ctx := testutil.ContextWithTimeout(t, testTimeout)
 	web, err := initWeb(
@@ -653,6 +657,7 @@ func TestAuth_ServeHTTP_logout(t *testing.T) {
 		testLogger,
 		nil,
 		auth,
+		baseMux,
 		agh.EmptyConfigModifier{},
 		false,
 		false,
@@ -661,7 +666,7 @@ func TestAuth_ServeHTTP_logout(t *testing.T) {
 
 	globalContext.web = web
 
-	mux := auth.middleware().Wrap(globalContext.mux)
+	mux := auth.middleware().Wrap(baseMux)
 
 	loginCookie := generateAuthCookie(t, mux, userName, userPassword)
 

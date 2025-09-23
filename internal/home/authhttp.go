@@ -264,9 +264,9 @@ func (web *webAPI) handleLogout(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusFound)
 }
 
-// RegisterAuthHandlers - register handlers
+// RegisterAuthHandlers registers authentication handlers.  web must not be nil.
 func RegisterAuthHandlers(web *webAPI) {
-	globalContext.mux.Handle(
+	web.conf.mux.Handle(
 		"/control/login",
 		web.postInstallHandler(ensure(http.MethodPost, web.handleLogin)),
 	)

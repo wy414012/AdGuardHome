@@ -173,7 +173,9 @@ func (web *webAPI) handleStatus(w http.ResponseWriter, r *http.Request) {
 // registerControlHandlers sets up HTTP handlers for various control endpoints.
 // web must not be nil.
 func registerControlHandlers(web *webAPI) {
-	globalContext.mux.Handle(
+	mux := web.conf.mux
+
+	mux.Handle(
 		"/control/version.json",
 		web.postInstallHandler(http.HandlerFunc(web.handleVersionJSON)),
 	)
@@ -185,12 +187,12 @@ func registerControlHandlers(web *webAPI) {
 	httpRegister(http.MethodGet, "/control/profile", web.handleGetProfile)
 	httpRegister(http.MethodPut, "/control/profile/update", web.handlePutProfile)
 
-	// No auth is necessary for DoH/DoT configurations.
-	globalContext.mux.Handle(
+	// No authentication is required for DoH/DoT configuration endpoints.
+	mux.Handle(
 		"/apple/doh.mobileconfig",
 		web.postInstallHandler(http.HandlerFunc(handleMobileConfigDoH)),
 	)
-	globalContext.mux.Handle(
+	mux.Handle(
 		"/apple/dot.mobileconfig",
 		web.postInstallHandler(http.HandlerFunc(handleMobileConfigDoT)),
 	)
@@ -198,6 +200,8 @@ func registerControlHandlers(web *webAPI) {
 }
 
 // httpRegister registers an HTTP handler.
+//
+// TODO(s.chzhen):  Do not use [globalContext.mux].
 func httpRegister(method, url string, handler http.HandlerFunc) {
 	if method == "" {
 		// "/dns-query" handler doesn't need auth, gzip and isn't restricted by 1 HTTP method

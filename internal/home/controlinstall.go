@@ -449,7 +449,7 @@ func (web *webAPI) handleInstallConfigure(w http.ResponseWriter, r *http.Request
 }
 
 // finalizeInstall completes first-run setup by applying user-provided settings.
-// r and req must not be nil.
+// w, r, and req must not be nil.
 func (web *webAPI) finalizeInstall(
 	ctx context.Context,
 	w http.ResponseWriter,
@@ -464,8 +464,6 @@ func (web *webAPI) finalizeInstall(
 	defer func() {
 		if err != nil {
 			copyInstallSettings(config, curConfig)
-
-			return
 		}
 	}()
 
@@ -592,16 +590,19 @@ func startMods(
 	return nil
 }
 
+// registerInstallHandlers registers install handlers.
 func (web *webAPI) registerInstallHandlers() {
-	globalContext.mux.Handle(
+	mux := web.conf.mux
+
+	mux.Handle(
 		"/control/install/get_addresses",
 		web.preInstallHandler(ensure(http.MethodGet, web.handleInstallGetAddresses)),
 	)
-	globalContext.mux.Handle(
+	mux.Handle(
 		"/control/install/check_config",
 		web.preInstallHandler(ensure(http.MethodPost, web.handleInstallCheckConfig)),
 	)
-	globalContext.mux.Handle(
+	mux.Handle(
 		"/control/install/configure",
 		web.preInstallHandler(ensure(http.MethodPost, web.handleInstallConfigure)),
 	)
