@@ -13,6 +13,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// testLogger is a logger used in tests.
+var testLogger = slogutil.NewDiscardLogger()
+
 func TestNewDefaultStorage(t *testing.T) {
 	items := []*Item{{
 		Domain: "example.com",
@@ -20,7 +23,7 @@ func TestNewDefaultStorage(t *testing.T) {
 	}}
 
 	s, err := NewDefaultStorage(&Config{
-		Logger:   slogutil.NewDiscardLogger(),
+		Logger:   testLogger,
 		Rewrites: items,
 		ListID:   -1,
 	})
@@ -33,7 +36,7 @@ func TestDefaultStorage_CRUD(t *testing.T) {
 	var items []*Item
 
 	s, err := NewDefaultStorage(&Config{
-		Logger:   slogutil.NewDiscardLogger(),
+		Logger:   testLogger,
 		Rewrites: items,
 		ListID:   -1,
 	})
@@ -122,7 +125,7 @@ func TestDefaultStorage_MatchRequest(t *testing.T) {
 	}}
 
 	s, err := NewDefaultStorage(&Config{
-		Logger:   slogutil.NewDiscardLogger(),
+		Logger:   testLogger,
 		Rewrites: items,
 		ListID:   -1,
 	})
@@ -298,7 +301,7 @@ func TestDefaultStorage_MatchRequest_Levels(t *testing.T) {
 	}}
 
 	s, err := NewDefaultStorage(&Config{
-		Logger:   slogutil.NewDiscardLogger(),
+		Logger:   testLogger,
 		Rewrites: items,
 		ListID:   -1,
 	})
@@ -370,7 +373,7 @@ func TestDefaultStorage_MatchRequest_ExceptionCNAME(t *testing.T) {
 	}}
 
 	s, err := NewDefaultStorage(&Config{
-		Logger:   slogutil.NewDiscardLogger(),
+		Logger:   testLogger,
 		Rewrites: items,
 		ListID:   -1,
 	})
@@ -438,7 +441,7 @@ func TestDefaultStorage_MatchRequest_ExceptionIP(t *testing.T) {
 	}}
 
 	s, err := NewDefaultStorage(&Config{
-		Logger:   slogutil.NewDiscardLogger(),
+		Logger:   testLogger,
 		Rewrites: items,
 		ListID:   -1,
 	})

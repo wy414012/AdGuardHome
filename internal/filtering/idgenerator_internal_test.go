@@ -5,7 +5,6 @@ import (
 
 	"github.com/AdguardTeam/AdGuardHome/internal/aghalg"
 	"github.com/AdguardTeam/AdGuardHome/internal/filtering/rulelist"
-	"github.com/AdguardTeam/golibs/logutil/slogutil"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -65,7 +64,7 @@ func TestIDGenerator_Fix(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			g := newIDGenerator(1, slogutil.NewDiscardLogger())
+			g := newIDGenerator(1, testLogger)
 			g.fix(tc.in)
 
 			assertUniqueIDs(t, tc.in)

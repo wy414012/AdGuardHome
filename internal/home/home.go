@@ -175,7 +175,7 @@ func setupContext(ctx context.Context, baseLogger *slog.Logger, opts options) (e
 
 	if globalContext.firstRun {
 		log.Info("This is the first time AdGuard Home is launched")
-		checkNetworkPermissions()
+		checkNetworkPermissions(ctx, baseLogger)
 
 		return nil
 	}
@@ -265,7 +265,14 @@ func setupHostsContainer(ctx context.Context, baseLogger *slog.Logger) (err erro
 		return fmt.Errorf("getting default system hosts paths: %w", err)
 	}
 
-	globalContext.etcHosts, err = aghnet.NewHostsContainer(osutil.RootDirFS(), hostsWatcher, paths...)
+	l := baseLogger.With(slogutil.KeyPrefix, "hosts")
+	globalContext.etcHosts, err = aghnet.NewHostsContainer(
+		ctx,
+		l,
+		osutil.RootDirFS(),
+		hostsWatcher,
+		paths...,
+	)
 	if err != nil {
 		closeErr := hostsWatcher.Shutdown(ctx)
 		if errors.Is(err, aghnet.ErrNoHostsPaths) {
@@ -308,9 +315,11 @@ func initContextClients(
 	config.DHCP.DataDir = globalContext.getDataDir()
 	config.DHCP.HTTPRegister = httpRegister
 	config.DHCP.CommandConstructor = executil.SystemCommandConstructor{}
+	config.DHCP.BaseLogger = logger
+	config.DHCP.Logger = logger.With(slogutil.KeyPrefix, "dhcp_server")
 	config.DHCP.ConfModifier = confModifier
 
-	globalContext.dhcpServer, err = dhcpd.Create(config.DHCP)
+	globalContext.dhcpServer, err = dhcpd.Create(ctx, config.DHCP)
 	if globalContext.dhcpServer == nil || err != nil {
 		// TODO(a.garipov): There are a lot of places in the code right
 		// now which assume that the DHCP server can be nil despite this
@@ -805,7 +814,7 @@ func run(
 		}()
 
 		if globalContext.dhcpServer != nil {
-			err = globalContext.dhcpServer.Start()
+			err = globalContext.dhcpServer.Start(ctx)
 			if err != nil {
 				log.Error("starting dhcp server: %s", err)
 			}
@@ -940,11 +949,11 @@ func (c *configuration) anonymizer() (ipmut *aghnet.IPMut) {
 }
 
 // checkNetworkPermissions checks if the current user permissions are enough to
-// use the required networking functionality.
-func checkNetworkPermissions() {
+// use the required networking functionality.  l must not be nil.
+func checkNetworkPermissions(ctx context.Context, l *slog.Logger) {
 	log.Info("Checking if AdGuard Home has necessary permissions")
 
-	if ok, err := aghnet.CanBindPrivilegedPorts(); !ok || err != nil {
+	if ok, err := aghnet.CanBindPrivilegedPorts(ctx, l); !ok || err != nil {
 		log.Fatal("This is the first launch of AdGuard Home. You must run it as Administrator.")
 	}
 
