@@ -141,7 +141,19 @@ func TestWeb_HandlePutProfile(t *testing.T) {
 	}
 
 	ctx := testutil.ContextWithTimeout(t, testTimeout)
-	web, err := initWeb(ctx, options{}, nil, nil, testLogger, nil, nil, confModifier, false)
+	web, err := initWeb(
+		ctx,
+		options{},
+		nil,
+		nil,
+		testLogger,
+		nil,
+		nil,
+		mux,
+		confModifier,
+		false,
+		false,
+	)
 	require.NoError(t, err)
 
 	globalContext.web = web
