@@ -443,15 +443,11 @@ func (m *tlsManager) handleTLSValidate(w http.ResponseWriter, r *http.Request) {
 
 	setts, err := unmarshalTLS(r)
 	if err != nil {
-		aghhttp.ErrorAndLog(
-			ctx,
-			m.logger,
-			r,
-			w,
-			http.StatusBadRequest,
-			"Failed to unmarshal TLS config: %s",
-			err,
-		)
+		// errFmt does not follow error message guidelines because it is sent
+		// directly to the frontend.
+		const errFmt = "Failed to unmarshal TLS config: %s"
+
+		aghhttp.ErrorAndLog(ctx, m.logger, r, w, http.StatusBadRequest, errFmt, err)
 
 		return
 	}

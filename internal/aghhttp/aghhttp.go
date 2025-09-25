@@ -23,7 +23,7 @@ type RegisterFunc func(method, url string, handler http.HandlerFunc)
 // OK writes "OK\n" to the response.  l and w must not be nil.
 func OK(ctx context.Context, l *slog.Logger, w http.ResponseWriter) {
 	if _, err := io.WriteString(w, "OK\n"); err != nil {
-		l.ErrorContext(ctx, "could not write body", slogutil.KeyError, err)
+		l.WarnContext(ctx, "writing ok body", slogutil.KeyError, err)
 	}
 }
 
@@ -48,7 +48,7 @@ func ErrorAndLog(
 	args ...any,
 ) {
 	text := fmt.Sprintf(format, args...)
-	l.ErrorContext(
+	l.WarnContext(
 		ctx,
 		"http error",
 		"host", r.Host,
