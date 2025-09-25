@@ -84,10 +84,10 @@ func GatewayIP(
 	)
 	if err != nil {
 		if code, ok := executil.ExitCodeFromError(err); ok {
-			l.DebugContext(ctx, "fetching gateway ip: unexpected exit code", "code", code)
-		} else {
-			l.DebugContext(ctx, "fetching gateway ip", slogutil.KeyError, err)
+			err = fmt.Errorf("unexpected exit code %d: %w", code, err)
 		}
+
+		l.DebugContext(ctx, "fetching gateway ip", slogutil.KeyError, err)
 
 		return netip.Addr{}
 	}

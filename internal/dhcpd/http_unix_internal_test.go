@@ -87,7 +87,6 @@ func TestServer_handleDHCPStatus(t *testing.T) {
 
 	ctx := testutil.ContextWithTimeout(t, testTimeout)
 	s, err := Create(ctx, &ServerConfig{
-		BaseLogger:   testLogger,
 		Logger:       testLogger,
 		Enabled:      true,
 		Conf4:        *defaultV4ServerConf(),
@@ -184,7 +183,6 @@ func TestServer_HandleUpdateStaticLease(t *testing.T) {
 
 	ctx := testutil.ContextWithTimeout(t, testTimeout)
 	s, err := Create(ctx, &ServerConfig{
-		BaseLogger:   testLogger,
 		Logger:       testLogger,
 		Enabled:      true,
 		Conf4:        *defaultV4ServerConf(),
@@ -275,7 +273,6 @@ func TestServer_HandleUpdateStaticLease_validation(t *testing.T) {
 
 	ctx := testutil.ContextWithTimeout(t, testTimeout)
 	s, err := Create(ctx, &ServerConfig{
-		BaseLogger:   testLogger,
 		Logger:       testLogger,
 		Enabled:      true,
 		Conf4:        *defaultV4ServerConf(),

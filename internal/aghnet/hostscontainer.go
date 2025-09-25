@@ -109,6 +109,8 @@ func NewHostsContainer(
 
 // Close implements the [io.Closer] interface for *HostsContainer.  It closes
 // both itself and its [aghos.FSWatcher].  Close must only be called once.
+//
+// TODO(s.chzhen):  Implement [service.Interface].
 func (hc *HostsContainer) Close() (err error) {
 	// TODO(s.chzhen):  Pass context.
 	ctx := context.TODO()

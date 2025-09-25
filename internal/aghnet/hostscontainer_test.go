@@ -13,18 +13,11 @@ import (
 	"github.com/AdguardTeam/AdGuardHome/internal/aghtest"
 	"github.com/AdguardTeam/golibs/errors"
 	"github.com/AdguardTeam/golibs/hostsfile"
-	"github.com/AdguardTeam/golibs/logutil/slogutil"
 	"github.com/AdguardTeam/golibs/netutil"
 	"github.com/AdguardTeam/golibs/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-// testTimeout is a common timeout for tests.
-const testTimeout = 1 * time.Second
-
-// testLogger is a logger used in tests.
-var testLogger = slogutil.NewDiscardLogger()
 
 func TestNewHostsContainer(t *testing.T) {
 	const dirname = "dir"

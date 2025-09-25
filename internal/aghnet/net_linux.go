@@ -38,7 +38,7 @@ func canBindPrivilegedPorts(ctx context.Context, l *slog.Logger) (can bool, err 
 			// warning and check admin rights.
 			l.WarnContext(
 				ctx,
-				"cannot check capability cap_net_bind_service",
+				"checking capability cap_net_bind_service",
 				slogutil.KeyError, err,
 			)
 		} else {

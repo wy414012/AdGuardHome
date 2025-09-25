@@ -108,7 +108,6 @@ var _ Interface = (*server)(nil)
 func Create(ctx context.Context, conf *ServerConfig) (s *server, err error) {
 	s = &server{
 		conf: &ServerConfig{
-			BaseLogger:         conf.BaseLogger,
 			Logger:             conf.Logger,
 			CommandConstructor: conf.CommandConstructor,
 			ConfModifier:       conf.ConfModifier,
@@ -166,7 +165,7 @@ func (s *server) setServers(
 	conf *ServerConfig,
 ) (v4Enabled, v6Enabled bool, err error) {
 	v4conf := conf.Conf4
-	v4conf.Logger = s.conf.BaseLogger.With(slogutil.KeyPrefix, "dhcpv4_server")
+	v4conf.Logger = s.conf.Logger.With("ip_version", "4")
 	v4conf.InterfaceName = s.conf.InterfaceName
 	v4conf.notify = s.onNotify
 	v4conf.Enabled = s.conf.Enabled && v4conf.RangeStart.IsValid()
@@ -181,7 +180,7 @@ func (s *server) setServers(
 	}
 
 	v6conf := conf.Conf6
-	v6conf.Logger = s.conf.BaseLogger.With(slogutil.KeyPrefix, "dhcpv6_server")
+	v6conf.Logger = s.conf.Logger.With("ip_version", "6")
 	v6conf.InterfaceName = s.conf.InterfaceName
 	v6conf.notify = s.onNotify
 	v6conf.Enabled = s.conf.Enabled && len(v6conf.RangeStart) != 0

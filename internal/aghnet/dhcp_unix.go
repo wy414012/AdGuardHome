@@ -145,7 +145,7 @@ func discover4(
 		ok, next, err = tryConn4(ctx, l, req, c, iface)
 		if next {
 			if err != nil {
-				l.DebugContext(ctx, "dhcpv4: trying a connection", slogutil.KeyError, err)
+				l.DebugContext(ctx, "trying a connection", slogutil.KeyError, err)
 			}
 
 			continue
@@ -170,13 +170,13 @@ func tryConn4(
 ) (ok, next bool, err error) {
 	// TODO: replicate dhclient's behavior of retrying several times with
 	// progressively longer timeouts.
-	l.Log(ctx, slogutil.LevelTrace, "dhcpv4: waiting for an answer", "timeout", defaultDiscoverTime)
+	l.Log(ctx, slogutil.LevelTrace, "waiting for an answer", "timeout", defaultDiscoverTime)
 
 	b := make([]byte, 1500)
 	n, _, err := c.ReadFrom(b)
 	if err != nil {
 		if errors.Is(err, os.ErrDeadlineExceeded) {
-			l.DebugContext(ctx, "dhcpv4: didn't receive dhcp response")
+			l.DebugContext(ctx, "did not receive response")
 
 			return false, false, nil
 		}
@@ -184,16 +184,16 @@ func tryConn4(
 		return false, false, fmt.Errorf("receiving packet: %w", err)
 	}
 
-	l.Log(ctx, slogutil.LevelTrace, "dhcpv4: received packet", "size", n)
+	l.Log(ctx, slogutil.LevelTrace, "received packet", "size", n)
 
 	response, err := dhcpv4.FromBytes(b[:n])
 	if err != nil {
-		l.DebugContext(ctx, "dhcpv4: encoding", slogutil.KeyError, err)
+		l.DebugContext(ctx, "encoding", slogutil.KeyError, err)
 
 		return false, true, err
 	}
 
-	l.DebugContext(ctx, "dhcpv4: received message from server", "summary", response.Summary())
+	l.DebugContext(ctx, "received message from server", "summary", response.Summary())
 
 	switch {
 	case
@@ -206,7 +206,7 @@ func tryConn4(
 
 		return false, true, nil
 	default:
-		l.Log(ctx, slogutil.LevelTrace, "dhcpv4: the packet is from an active dhcp server")
+		l.Log(ctx, slogutil.LevelTrace, "packet is from an active dhcp server")
 
 		return true, false, nil
 	}
@@ -261,7 +261,7 @@ func discover6(
 		return false, fmt.Errorf("dhcpv6: dhcpv6.NewSolicit: %w", err)
 	}
 
-	l.DebugContext(ctx, "dhcpv6: listening to udp6", "addr", udpAddr)
+	l.DebugContext(ctx, "listening on udp6", "addr", udpAddr)
 	c, err := nclient6.NewIPv6UDPConn(iface.Name, dhcpv6.DefaultClientPort)
 	if err != nil {
 		return false, fmt.Errorf("dhcpv6: Couldn't listen on :546: %w", err)
@@ -278,7 +278,7 @@ func discover6(
 		ok, next, err = tryConn6(ctx, l, req, c)
 		if next {
 			if err != nil {
-				l.DebugContext(ctx, "dhcpv6: trying a connection", slogutil.KeyError, err)
+				l.DebugContext(ctx, "trying a connection", slogutil.KeyError, err)
 			}
 
 			continue
@@ -301,7 +301,7 @@ func tryConn6(
 ) (ok, next bool, err error) {
 	// TODO: replicate dhclient's behavior of retrying several times with
 	// progressively longer timeouts.
-	l.Log(ctx, slogutil.LevelTrace, "dhcpv6: waiting for an answer", "timeout", defaultDiscoverTime)
+	l.Log(ctx, slogutil.LevelTrace, "waiting for an answer", "timeout", defaultDiscoverTime)
 
 	b := make([]byte, 4096)
 	err = c.SetDeadline(time.Now().Add(defaultDiscoverTime))
@@ -312,7 +312,7 @@ func tryConn6(
 	n, _, err := c.ReadFrom(b)
 	if err != nil {
 		if errors.Is(err, os.ErrDeadlineExceeded) {
-			l.DebugContext(ctx, "dhcpv6: didn't receive dhcp response")
+			l.DebugContext(ctx, "did not receive response")
 
 			return false, false, nil
 		}
@@ -324,12 +324,12 @@ func tryConn6(
 
 	response, err := dhcpv6.FromBytes(b[:n])
 	if err != nil {
-		l.DebugContext(ctx, "dhcpv6: encoding", slogutil.KeyError, err)
+		l.DebugContext(ctx, "encoding", slogutil.KeyError, err)
 
 		return false, true, err
 	}
 
-	l.DebugContext(ctx, "dhcpv6: received message from server", "summary", response.Summary())
+	l.DebugContext(ctx, "received message from server", "summary", response.Summary())
 
 	cid := req.Options.ClientID()
 	msg, err := response.GetInnerMessage()
@@ -345,7 +345,7 @@ func tryConn6(
 		rcid != nil &&
 		cid.Equal(rcid)) {
 
-		l.DebugContext(ctx, "dhcpv6: received message from server does not match our request")
+		l.DebugContext(ctx, "received message from server does not match our request")
 
 		return false, true, nil
 	}

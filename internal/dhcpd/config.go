@@ -19,10 +19,6 @@ import (
 // ServerConfig is the configuration for the DHCP server.  The order of YAML
 // fields is important, since the YAML configuration file follows it.
 type ServerConfig struct {
-	// BaseLogger is used for creating loggers for dhcpv4 and dhcpv6.  It must
-	// not be nil.
-	BaseLogger *slog.Logger `yaml:"-"`
-
 	// Logger is used for logging the operation of the DHCP server.  It must not
 	// be nil.
 	Logger *slog.Logger `yaml:"-"`

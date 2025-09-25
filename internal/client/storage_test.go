@@ -576,10 +576,9 @@ func TestClientsAddExisting(t *testing.T) {
 
 		// First, init a DHCP server with a single static lease.
 		config := &dhcpd.ServerConfig{
-			BaseLogger: testLogger,
-			Logger:     testLogger,
-			Enabled:    true,
-			DataDir:    t.TempDir(),
+			Logger:  testLogger,
+			Enabled: true,
+			DataDir: t.TempDir(),
 			Conf4: dhcpd.V4ServerConf{
 				Enabled:    true,
 				GatewayIP:  netip.MustParseAddr("1.2.3.1"),

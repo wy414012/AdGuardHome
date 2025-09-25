@@ -26,7 +26,7 @@ func (winServer) UpdateStaticLease(_ *dhcpsvc.Lease) (err error)       { return 
 func (winServer) FindMACbyIP(_ netip.Addr) (mac net.HardwareAddr)      { return nil }
 func (winServer) WriteDiskConfig4(_ *V4ServerConf)                     {}
 func (winServer) WriteDiskConfig6(_ *V6ServerConf)                     {}
-func (winServer) Start(ctx context.Context) (err error)                { return nil }
+func (winServer) Start(_ context.Context) (err error)                  { return nil }
 func (winServer) Stop() (err error)                                    { return nil }
 func (winServer) HostByIP(_ netip.Addr) (host string)                  { return "" }
 func (winServer) IPByHost(_ string) (ip netip.Addr)                    { return netip.Addr{} }
