@@ -196,7 +196,7 @@ func registerControlHandlers(web *webAPI) {
 		"/apple/dot.mobileconfig",
 		web.postInstallHandler(http.HandlerFunc(handleMobileConfigDoT)),
 	)
-	RegisterAuthHandlers(web)
+	registerAuthHandlers(web)
 }
 
 // httpRegister registers an HTTP handler.
