@@ -2,6 +2,7 @@ package dhcpd
 
 import (
 	"fmt"
+	"log/slog"
 	"net"
 	"net/netip"
 	"time"
@@ -17,6 +18,10 @@ import (
 // ServerConfig is the configuration for the DHCP server.  The order of YAML
 // fields is important, since the YAML configuration file follows it.
 type ServerConfig struct {
+	// Logger is used for logging the operation of the DHCP server.  It must not
+	// be nil.
+	Logger *slog.Logger `yaml:"-"`
+
 	// CommandConstructor is used to run external commands.  It must not be nil.
 	CommandConstructor executil.CommandConstructor `yaml:"-"`
 

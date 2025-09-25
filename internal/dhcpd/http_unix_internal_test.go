@@ -85,6 +85,7 @@ func TestServer_handleDHCPStatus(t *testing.T) {
 	}
 
 	s, err := Create(&ServerConfig{
+		Logger:       testLogger,
 		Enabled:      true,
 		Conf4:        *defaultV4ServerConf(),
 		DataDir:      t.TempDir(),
@@ -267,6 +268,7 @@ func TestServer_HandleUpdateStaticLease_validation(t *testing.T) {
 	}}
 
 	s, err := Create(&ServerConfig{
+		Logger:       testLogger,
 		Enabled:      true,
 		Conf4:        *defaultV4ServerConf(),
 		Conf6:        V6ServerConf{},
